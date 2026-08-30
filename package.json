@@ -1,0 +1,18 @@
+{
+  "name": "voter",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev": "npm run dev:api & npm run dev:web",
+    "dev:web": "npm run dev -w web",
+    "dev:api": "npm run dev -w api",
+    "build": "npm run build -w api && npm run build -w web",
+    "db:up": "docker compose up -d",
+    "db:migrate": "npm run prisma:migrate -w api",
+    "db:seed": "npm run prisma:seed -w api",
+    "db:studio": "npm run prisma:studio -w api"
+  }
+}

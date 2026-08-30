@@ -1,0 +1,354 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  DELETED
+}
+
+enum PollType {
+  SINGLE
+  MULTIPLE
+}
+
+enum PollStatus {
+  ACTIVE
+  EXPIRED
+  HIDDEN
+  REMOVED
+  DELETED
+}
+
+enum ReportTargetType {
+  POLL
+  COMMENT
+  USER
+  IMAGE
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  HATE_SPEECH
+  VIOLENCE
+  SEXUAL_CONTENT
+  SCAM
+  MISINFORMATION
+  IMPERSONATION
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum NotificationType {
+  FOLLOW
+  POLL_LIKE
+  COMMENT
+  REPLY
+  VOTE
+  MILESTONE
+  MENTION
+}
+
+model User {
+  id           String        @id @default(cuid())
+  username     String        @unique
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  displayName  String?       @map("display_name")
+  avatarUrl    String?       @map("avatar_url")
+  bio          String?
+  role         Role          @default(USER)
+  status       AccountStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  polls             Poll[]
+  comments          Comment[]
+  pollLikes         PollLike[]
+  commentLikes      CommentLike[]
+  submissions       VoteSubmission[]
+  followers         Follow[]             @relation("Following")
+  following         Follow[]             @relation("Follower")
+  savedPolls        SavedPoll[]
+  notifications     Notification[]       @relation("NotificationRecipient")
+  actedNotifications Notification[]      @relation("NotificationActor")
+  reportsFiled      Report[]             @relation("Reporter")
+  reportsReviewed   Report[]             @relation("Reviewer")
+  sessions          Session[]
+  passwordResets    PasswordReset[]
+  blocksMade        Block[]              @relation("Blocker")
+  blocksReceived    Block[]              @relation("Blocked")
+  followedCategories UserCategory[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_resets")
+}
+
+model Category {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  name      String
+  polls     Poll[]
+  followers UserCategory[]
+
+  @@map("categories")
+}
+
+model UserCategory {
+  userId     String @map("user_id")
+  categoryId String @map("category_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([userId, categoryId])
+  @@map("user_categories")
+}
+
+model Tag {
+  id    String    @id @default(cuid())
+  slug  String    @unique
+  name  String
+  polls PollTag[]
+
+  @@map("tags")
+}
+
+model Poll {
+  id               String     @id @default(cuid())
+  userId           String     @map("user_id")
+  question         String
+  description      String?
+  pollType         PollType   @default(SINGLE) @map("poll_type")
+  categoryId       String?    @map("category_id")
+  allowComments    Boolean    @default(true) @map("allow_comments")
+  anonymousVoting  Boolean    @default(false) @map("anonymous_voting")
+  expiresAt        DateTime?  @map("expires_at")
+  status           PollStatus @default(ACTIVE)
+  imageUrl         String?    @map("image_url")
+  voteCount        Int        @default(0) @map("vote_count")
+  commentCount     Int        @default(0) @map("comment_count")
+  likeCount        Int        @default(0) @map("like_count")
+  shareCount       Int        @default(0) @map("share_count")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  author      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category?        @relation(fields: [categoryId], references: [id])
+  options     PollOption[]
+  submissions VoteSubmission[]
+  comments    Comment[]
+  likes       PollLike[]
+  savedBy     SavedPoll[]
+  tags        PollTag[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([categoryId])
+  @@map("polls")
+}
+
+model PollOption {
+  id       String  @id @default(cuid())
+  pollId   String  @map("poll_id")
+  text     String
+  imageUrl String? @map("image_url")
+  position Int
+  voteCount Int    @default(0) @map("vote_count")
+  poll     Poll    @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  choices  VoteChoice[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+model PollTag {
+  pollId String @map("poll_id")
+  tagId  String @map("tag_id")
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, tagId])
+  @@map("poll_tags")
+}
+
+model VoteSubmission {
+  id        String   @id @default(cuid())
+  pollId    String   @map("poll_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  choices   VoteChoice[]
+
+  @@unique([userId, pollId])
+  @@index([pollId])
+  @@map("vote_submissions")
+}
+
+model VoteChoice {
+  id           String         @id @default(cuid())
+  submissionId String         @map("submission_id")
+  optionId     String         @map("option_id")
+  submission   VoteSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  option       PollOption     @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, optionId])
+  @@index([optionId])
+  @@map("vote_choices")
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  pollId    String    @map("poll_id")
+  userId    String    @map("user_id")
+  parentId  String?   @map("parent_id")
+  content   String
+  likeCount Int       @default(0) @map("like_count")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  poll     Poll          @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   Comment?      @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[]     @relation("CommentReplies")
+  likes    CommentLike[]
+
+  @@index([pollId, createdAt])
+  @@index([parentId])
+  @@map("comments")
+}
+
+model PollLike {
+  userId    String   @map("user_id")
+  pollId    String   @map("poll_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@id([userId, pollId])
+  @@map("poll_likes")
+}
+
+model CommentLike {
+  userId    String   @map("user_id")
+  commentId String   @map("comment_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, commentId])
+  @@map("comment_likes")
+}
+
+model Follow {
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+model Block {
+  blockerId String   @map("blocker_id")
+  blockedId String   @map("blocked_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@map("blocks")
+}
+
+model SavedPoll {
+  userId    String   @map("user_id")
+  pollId    String   @map("poll_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@id([userId, pollId])
+  @@map("saved_polls")
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String           @map("user_id")
+  actorId     String?          @map("actor_id")
+  type        NotificationType
+  referenceId String?          @map("reference_id")
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now()) @map("created_at")
+  user        User             @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor       User?            @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, read, createdAt])
+  @@map("notifications")
+}
+
+model Report {
+  id          String           @id @default(cuid())
+  reporterId  String           @map("reporter_id")
+  targetType  ReportTargetType @map("target_type")
+  targetId    String           @map("target_id")
+  reason      ReportReason
+  description String?
+  status      ReportStatus     @default(PENDING)
+  reviewedById String?         @map("reviewed_by")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  reviewedAt  DateTime?        @map("reviewed_at")
+  reporter    User             @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewedBy  User?            @relation("Reviewer", fields: [reviewedById], references: [id])
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@map("reports")
+}
