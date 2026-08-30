@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { client } from '@/lib/api';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { PageHeader } from '@/components/layout/page-header';
 
 const SORTS = [
   { id: 'trending', label: 'Trending' },
@@ -25,17 +26,19 @@ export default function ExplorePage() {
 
   return (
     <AppShell>
-      <div className="border-b border-line px-4 py-4">
-        <h1 className="font-display text-3xl">Explore</h1>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+      <div className="px-4 pb-2 pt-6 sm:px-0">
+        <PageHeader title="Explore" description="Browse what’s trending across the community." />
+        <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
           {SORTS.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setSort(item.id)}
               className={cn(
-                'rounded-full px-3 py-1.5 text-sm whitespace-nowrap',
-                sort === item.id ? 'bg-ink text-paper' : 'bg-line',
+                'rounded-full px-4 py-2 text-sm font-semibold transition whitespace-nowrap',
+                sort === item.id
+                  ? 'bg-forest text-white shadow-sm'
+                  : 'bg-surface text-ink ring-1 ring-border hover:bg-surface-soft',
               )}
             >
               {item.label}
@@ -46,7 +49,10 @@ export default function ExplorePage() {
           <button
             type="button"
             onClick={() => setCategory('')}
-            className={cn('rounded-full px-3 py-1 text-sm', !category ? 'bg-vote text-white' : 'bg-paper-2 border border-line')}
+            className={cn(
+              'rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition',
+              !category ? 'bg-brand text-white shadow-sm' : 'bg-surface text-ink ring-1 ring-border hover:bg-surface-soft',
+            )}
           >
             All
           </button>
@@ -56,8 +62,8 @@ export default function ExplorePage() {
               type="button"
               onClick={() => setCategory(c.slug)}
               className={cn(
-                'rounded-full px-3 py-1 text-sm whitespace-nowrap',
-                category === c.slug ? 'bg-vote text-white' : 'bg-paper-2 border border-line',
+                'rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition',
+                category === c.slug ? 'bg-brand text-white shadow-sm' : 'bg-surface text-ink ring-1 ring-border hover:bg-surface-soft',
               )}
             >
               {c.name}
@@ -65,7 +71,9 @@ export default function ExplorePage() {
           ))}
         </div>
       </div>
-      <FeedList path={`/api/v1/explore?sort=${sort}${category ? `&category=${category}` : ''}`} />
+      <div className="px-4 py-4 sm:px-0">
+        <FeedList path={`/api/v1/explore?sort=${sort}${category ? `&category=${category}` : ''}`} />
+      </div>
     </AppShell>
   );
 }

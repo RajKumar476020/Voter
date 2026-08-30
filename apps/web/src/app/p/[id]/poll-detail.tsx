@@ -11,6 +11,8 @@ import { EmptyState, Skeleton } from '@/components/ui/empty';
 import { useAuth } from '@/components/providers/auth-provider';
 import { FollowButton } from '@/components/user/follow-button';
 import { useRouter } from 'next/navigation';
+import { Avatar } from '@/components/ui/avatar';
+import Link from 'next/link';
 
 export function PollDetail({ id }: { id: string }) {
   const { user } = useAuth();
@@ -37,7 +39,7 @@ export function PollDetail({ id }: { id: string }) {
   if (poll.isLoading) {
     return (
       <AppShell>
-        <div className="p-4">
+        <div className="px-4 pt-6 sm:px-0">
           <Skeleton className="h-64" />
         </div>
       </AppShell>
@@ -46,7 +48,7 @@ export function PollDetail({ id }: { id: string }) {
   if (poll.isError || !poll.data) {
     return (
       <AppShell>
-        <div className="p-6">
+        <div className="px-4 py-10 sm:px-0">
           <EmptyState title="Poll unavailable" body="This question may have been removed." />
         </div>
       </AppShell>
@@ -57,21 +59,42 @@ export function PollDetail({ id }: { id: string }) {
     <AppShell
       right={
         <div className="space-y-4">
-          <p className="font-display text-xl">{poll.data.author.displayName || poll.data.author.username}</p>
-          <FollowButton userId={poll.data.author.id} following={poll.data.followingAuthor} />
-          {poll.data.category ? <p className="text-sm text-muted">{poll.data.category.name}</p> : null}
+          <div className="rounded-[18px] border border-border bg-surface p-5 shadow-card">
+            <div className="flex items-center gap-3">
+              <Avatar name={poll.data.author.displayName || poll.data.author.username} src={poll.data.author.avatarUrl} />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">{poll.data.author.displayName || poll.data.author.username}</p>
+                <p className="text-xs text-muted">@{poll.data.author.username}</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <FollowButton userId={poll.data.author.id} following={poll.data.followingAuthor} />
+            </div>
+            {poll.data.category ? (
+              <p className="mt-3 inline-flex rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-forest">
+                {poll.data.category.name}
+              </p>
+            ) : null}
+          </div>
+          <Link href={`/u/${poll.data.author.username}`} className="block text-sm font-medium text-brand hover:underline">
+            View profile →
+          </Link>
         </div>
       }
     >
-      <PollCard poll={poll.data} />
-      <section className="border-t border-line">
-        <h2 className="px-4 pt-5 font-display text-2xl">Discussion</h2>
+      <div className="px-4 pt-6 sm:px-0">
+        <PollCard poll={poll.data} />
+      </div>
+      <section className="mx-4 mb-6 mt-4 rounded-[18px] border border-border bg-surface p-5 shadow-card sm:mx-0 sm:p-6">
+        <h2 className="text-[20px] font-semibold tracking-tight text-ink sm:text-[22px]" style={{ letterSpacing: '-0.02em' }}>
+          Discussion
+        </h2>
         {!poll.data.allowComments ? (
-          <p className="p-4 text-muted">Comments are turned off.</p>
+          <p className="mt-3 text-sm leading-relaxed text-muted">Comments are turned off for this poll.</p>
         ) : (
           <>
             <form
-              className="px-4 py-3"
+              className="mt-4"
               onSubmit={(e: FormEvent) => {
                 e.preventDefault();
                 if (!user) {
@@ -82,21 +105,31 @@ export function PollDetail({ id }: { id: string }) {
               }}
             >
               <textarea
-                className="min-h-20 w-full rounded-2xl border border-line bg-paper-2 px-3 py-2"
+                className="min-h-20 w-full rounded-[12px] border border-border bg-surface-soft/60 px-3 py-3 text-sm placeholder:text-placeholder focus:border-brand focus:ring-[3px] focus:ring-brand/10 outline-none"
                 maxLength={2000}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="What do you think?"
               />
-              <p className="mt-1 text-right text-xs text-muted">{text.length}/2000</p>
-              <button type="submit" className="mt-1 text-sm font-semibold text-vote" disabled={!text.trim() || send.isPending}>
-                Comment
-              </button>
+              <div className="mt-2 flex items-center justify-between">
+                <p className="text-xs text-muted">{text.length}/2000</p>
+                <button
+                  type="submit"
+                  className="rounded-[11px] bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-40"
+                  disabled={!text.trim() || send.isPending}
+                >
+                  Comment
+                </button>
+              </div>
             </form>
             {comments.data?.items.length ? (
-              <CommentThread pollId={id} comments={comments.data.items} />
+              <div className="mt-5">
+                <CommentThread pollId={id} comments={comments.data.items} />
+              </div>
             ) : (
-              <p className="p-4 text-muted">No comments yet. Start the thread.</p>
+              <p className="mt-6 rounded-[12px] border border-dashed border-border bg-surface-soft/50 px-4 py-6 text-center text-sm text-muted">
+                No comments yet. Be the first to share your thoughts.
+              </p>
             )}
           </>
         )}

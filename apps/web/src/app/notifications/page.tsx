@@ -57,7 +57,7 @@ function NotificationsList() {
 
   if (list.isLoading) {
     return (
-      <div className="p-4">
+      <div className="px-4 pt-6 sm:px-0">
         <Skeleton className="h-40" />
       </div>
     );
@@ -67,18 +67,20 @@ function NotificationsList() {
 
   return (
     <div>
-      <div className="flex items-center justify-between border-b border-line px-4 py-4">
-        <h1 className="font-display text-3xl">Notifications</h1>
-        <Button variant="ghost" onClick={() => readAll.mutate()}>
+      <div className="flex flex-col gap-3 px-4 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-0">
+        <h1 className="text-[26px] font-semibold tracking-tight text-forest sm:text-[30px]" style={{ letterSpacing: '-0.025em' }}>
+          Notifications
+        </h1>
+        <Button variant="outline" size="sm" onClick={() => readAll.mutate()}>
           Mark all read
         </Button>
       </div>
       {!items.length ? (
-        <div className="p-6">
+        <div className="px-4 py-6 sm:px-0">
           <EmptyState title="You’re all caught up" body="When people vote, follow, or reply, it shows up here." />
         </div>
       ) : (
-        <ul>
+        <ul className="space-y-2 px-4 py-6 sm:px-0">
           {items.map((item) => {
             const href =
               item.type === 'FOLLOW' && item.actor
@@ -87,10 +89,17 @@ function NotificationsList() {
                   ? `/p/${item.referenceId}`
                   : '/';
             return (
-              <li key={item.id} className={item.read ? '' : 'bg-vote/5'}>
+              <li
+                key={item.id}
+                className={
+                  item.read
+                    ? 'rounded-[18px] border border-border bg-surface shadow-card'
+                    : 'rounded-[18px] border border-brand/15 bg-brand-soft shadow-sm'
+                }
+              >
                 <Link
                   href={href}
-                  className="flex items-center gap-3 border-b border-line px-4 py-3"
+                  className="flex items-center gap-3 p-4"
                   onClick={() => {
                     if (!item.read) readOne.mutate(item.id);
                   }}
@@ -99,13 +108,14 @@ function NotificationsList() {
                     name={item.actor?.displayName || item.actor?.username || 'Voter'}
                     src={item.actor?.avatarUrl}
                   />
-                  <span className="min-w-0">
-                    <span className="block text-sm">
-                      <strong>{item.actor?.displayName || item.actor?.username || 'Someone'}</strong>{' '}
-                      {COPY[item.type] ?? 'sent a notification'}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm leading-snug">
+                      <strong className="font-semibold text-ink">{item.actor?.displayName || item.actor?.username || 'Someone'}</strong>{' '}
+                      <span className="text-ink-soft">{COPY[item.type] ?? 'sent a notification'}</span>
                     </span>
                     <span className="text-xs text-muted">{timeAgo(item.createdAt)}</span>
                   </span>
+                  {!item.read ? <span className="h-2 w-2 shrink-0 rounded-full bg-brand" aria-hidden /> : null}
                 </Link>
               </li>
             );

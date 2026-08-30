@@ -2,11 +2,12 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { GripVertical, ImagePlus, Plus, Trash2, Upload } from 'lucide-react';
 import { AppShell } from '@/components/layout/app-shell';
 import { RequireAuth } from '@/components/auth/require-auth';
 import { Button } from '@/components/ui/button';
-import { Field, Input, Textarea } from '@/components/ui/field';
+import { Field, Input, Select, Textarea } from '@/components/ui/field';
+import { PageHeader } from '@/components/layout/page-header';
 import { ApiError, client } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
 import { PollCard } from '@/lib/types';
@@ -14,7 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 
 const DURATIONS = [
-  { id: 'none', label: 'No expiration' },
+  { id: 'none', label: 'No expiry' },
   { id: '1h', label: '1 hour' },
   { id: '6h', label: '6 hours' },
   { id: '12h', label: '12 hours' },
@@ -106,145 +107,217 @@ function CreateForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-2xl space-y-6 px-4 py-6">
-      <h1 className="font-display text-3xl">Create a poll</h1>
-      <Field label="Question" hint={`${question.length}/500`}>
-        <Textarea value={question} maxLength={500} onChange={(e) => setQuestion(e.target.value)} required />
-      </Field>
-      <Field label="Description" hint={`Optional · ${description.length}/2000`}>
-        <Textarea value={description} maxLength={2000} onChange={(e) => setDescription(e.target.value)} />
-      </Field>
-      <Field label="Cover image">
-        <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => onImage(e.target.files?.[0])} />
-      </Field>
-      {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt="" className="max-h-56 w-full rounded-2xl object-cover" />
-      ) : null}
+    <form onSubmit={onSubmit} className="mx-auto max-w-[920px] px-4 pb-10 pt-6 sm:px-0">
+      <PageHeader title="Create a poll" description="Ask something amazing." />
 
-      <div>
-        <p className="text-sm font-medium">Options</p>
-        <div className="mt-2 space-y-2">
-          {options.map((option, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <GripVertical className="h-4 w-4 text-muted" aria-hidden />
-              <Input
-                value={option.text}
-                maxLength={200}
-                placeholder={`Option ${index + 1}`}
-                onChange={(e) =>
-                  setOptions((curr) => curr.map((item, i) => (i === index ? { ...item, text: e.target.value } : item)))
-                }
+      <div className="mt-7 grid gap-6 lg:grid-cols-[1.45fr_0.85fr]">
+        {/* Main editor */}
+        <div className="space-y-5">
+          <div className="rounded-[18px] border border-border bg-surface p-5 shadow-card sm:p-6">
+            <Field label="Question" hint={`${question.length}/500`}>
+              <Textarea
+                value={question}
+                maxLength={500}
+                placeholder="What’s your question?"
+                onChange={(e) => setQuestion(e.target.value)}
+                className="min-h-[96px] text-[15px]"
+                required
               />
-              <label className="cursor-pointer text-xs text-muted hover:underline">
-                {option.imageUrl ? 'Image' : 'Add image'}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="sr-only"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const uploaded = await uploadImage(file);
-                    setOptions((curr) =>
-                      curr.map((item, i) => (i === index ? { ...item, imageUrl: uploaded.url } : item)),
-                    );
-                  }}
+            </Field>
+            <div className="mt-4">
+              <Field label="Description" hint={`Optional · ${description.length}/2000`}>
+                <Textarea
+                  value={description}
+                  maxLength={2000}
+                  placeholder="Add context — optional"
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="min-h-[84px]"
                 />
-              </label>
-              <button type="button" aria-label="Move up" className="text-sm text-muted" onClick={() => move(index, -1)}>
-                ↑
-              </button>
-              <button type="button" aria-label="Move down" className="text-sm text-muted" onClick={() => move(index, 1)}>
-                ↓
-              </button>
-              {options.length > 2 ? (
-                <button
-                  type="button"
-                  aria-label="Remove option"
-                  onClick={() => setOptions((curr) => curr.filter((_, i) => i !== index))}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              ) : null}
+              </Field>
             </div>
-          ))}
-        </div>
-        {options.length < 10 ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="mt-2"
-            onClick={() => setOptions((curr) => [...curr, { text: '' }])}
-          >
-            <Plus className="h-4 w-4" /> Add option
-          </Button>
-        ) : null}
-      </div>
+          </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Poll type">
-          <select
-            className="h-11 w-full rounded-2xl border border-line bg-paper-2 px-3"
-            value={pollType}
-            onChange={(e) => setPollType(e.target.value as 'SINGLE' | 'MULTIPLE')}
-          >
-            <option value="SINGLE">Single choice</option>
-            <option value="MULTIPLE">Multiple choice</option>
-          </select>
-        </Field>
-        <Field label="Category">
-          <select
-            className="h-11 w-full rounded-2xl border border-line bg-paper-2 px-3"
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <option value="">None</option>
-            {(categories.data ?? []).map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </div>
-      <Field label="Tags" hint="Comma separated">
-        <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="phones, design" />
-      </Field>
-      <Field label="Duration">
-        <div className="flex flex-wrap gap-2">
-          {DURATIONS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setDuration(item.id)}
-              className={cn(
-                'rounded-full px-3 py-1.5 text-sm',
-                duration === item.id ? 'bg-ink text-paper' : 'bg-line',
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
+          <div className="rounded-[18px] border border-border bg-surface p-5 shadow-card sm:p-6">
+            <p className="text-sm font-semibold text-ink">Options</p>
+            <p className="text-xs text-muted">Drag to reorder. Add up to 10 choices.</p>
+            <div className="mt-3 space-y-2.5">
+              {options.map((option, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col gap-2 rounded-[14px] border border-border bg-surface-soft/60 p-3 sm:flex-row sm:items-center"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <GripVertical className="hidden h-4 w-4 shrink-0 text-muted sm:block" aria-hidden />
+                    <Input
+                      value={option.text}
+                      maxLength={200}
+                      placeholder={`Option ${index + 1}`}
+                      onChange={(e) =>
+                        setOptions((curr) => curr.map((item, i) => (i === index ? { ...item, text: e.target.value } : item)))
+                      }
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5 sm:shrink-0">
+                    <label className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-surface px-3 py-1.5 text-xs font-semibold text-ink ring-1 ring-border hover:bg-mist">
+                      <ImagePlus className="h-3.5 w-3.5" />
+                      {option.imageUrl ? 'Image ✓' : 'Add image'}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="sr-only"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const uploaded = await uploadImage(file);
+                          setOptions((curr) =>
+                            curr.map((item, i) => (i === index ? { ...item, imageUrl: uploaded.url } : item)),
+                          );
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      aria-label="Move up"
+                      className="rounded-full p-1.5 text-muted hover:bg-surface hover:text-ink"
+                      onClick={() => move(index, -1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Move down"
+                      className="rounded-full p-1.5 text-muted hover:bg-surface hover:text-ink"
+                      onClick={() => move(index, 1)}
+                    >
+                      ↓
+                    </button>
+                    {options.length > 2 ? (
+                      <button
+                        type="button"
+                        aria-label="Remove option"
+                        className="rounded-full p-1.5 text-muted hover:bg-danger/10 hover:text-danger"
+                        onClick={() => setOptions((curr) => curr.filter((_, i) => i !== index))}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {options.length < 10 ? (
+              <Button type="button" variant="outline" className="mt-3" onClick={() => setOptions((curr) => [...curr, { text: '' }])}>
+                <Plus className="h-4 w-4" /> Add option
+              </Button>
+            ) : null}
+          </div>
+
+          <div className="grid gap-4 rounded-[18px] border border-border bg-surface p-5 shadow-card sm:grid-cols-2 sm:p-6">
+            <Field label="Poll type">
+              <Select value={pollType} onChange={(e) => setPollType(e.target.value as 'SINGLE' | 'MULTIPLE')}>
+                <option value="SINGLE">Single choice</option>
+                <option value="MULTIPLE">Multiple choice</option>
+              </Select>
+            </Field>
+            <Field label="Category">
+              <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+                <option value="">None</option>
+                {(categories.data ?? []).map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+
+          <div className="rounded-[18px] border border-border bg-surface p-5 shadow-card sm:p-6">
+            <Field label="Tags" hint="Comma separated">
+              <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="phones, design, inspiration" />
+            </Field>
+
+            <Field label="Duration">
+              <div className="flex flex-wrap gap-2">
+                {DURATIONS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setDuration(item.id)}
+                    className={cn(
+                      'rounded-full px-3.5 py-2 text-sm font-semibold transition',
+                      duration === item.id ? 'bg-brand text-white shadow-sm' : 'bg-surface text-ink ring-1 ring-border hover:bg-surface-soft',
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            {duration === 'custom' ? (
+              <div className="mt-4">
+                <Field label="Expires at">
+                  <Input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
+                </Field>
+              </div>
+            ) : null}
+
+            <div className="mt-5 space-y-3 border-t border-border/60 pt-4">
+              <label className="flex cursor-pointer items-center gap-3 text-sm font-medium text-ink">
+                <input
+                  type="checkbox"
+                  checked={allowComments}
+                  onChange={(e) => setAllowComments(e.target.checked)}
+                  className="h-4 w-4 rounded border-border text-brand focus:ring-brand/20"
+                />
+                Allow comments
+              </label>
+              <label className="flex cursor-pointer items-center gap-3 text-sm font-medium text-ink">
+                <input
+                  type="checkbox"
+                  checked={anonymousVoting}
+                  onChange={(e) => setAnonymousVoting(e.target.checked)}
+                  className="h-4 w-4 rounded border-border text-brand focus:ring-brand/20"
+                />
+                Anonymous voting
+              </label>
+            </div>
+
+            {error ? <p className="mt-4 rounded-[10px] bg-danger/8 px-3 py-2 text-sm text-danger">{error}</p> : null}
+            <Button className="mt-5 w-full" type="submit" disabled={!canPublish || busy}>
+              {busy ? 'Publishing…' : 'Publish poll'}
+            </Button>
+          </div>
         </div>
-      </Field>
-      {duration === 'custom' ? (
-        <Field label="Expires at">
-          <Input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
-        </Field>
-      ) : null}
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={allowComments} onChange={(e) => setAllowComments(e.target.checked)} />
-        Allow comments
-      </label>
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={anonymousVoting} onChange={(e) => setAnonymousVoting(e.target.checked)} />
-        Anonymous voting
-      </label>
-      {error ? <p className="text-sm text-vote">{error}</p> : null}
-      <Button className="w-full" type="submit" disabled={!canPublish || busy}>
-        {busy ? 'Publishing…' : 'Publish poll'}
-      </Button>
+
+        {/* Media / helper rail */}
+        <div className="space-y-4">
+          <div className="rounded-[18px] border border-border bg-surface p-5 shadow-card">
+            <p className="text-sm font-semibold text-ink">Cover image</p>
+            <label className="mt-3 flex cursor-pointer flex-col items-center justify-center rounded-[14px] border border-dashed border-border bg-surface-soft/60 px-4 py-8 text-center hover:border-brand/30 hover:bg-brand-soft/40">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-brand shadow-sm">
+                <Upload className="h-5 w-5" strokeWidth={1.9} />
+              </span>
+              <span className="mt-2 text-sm font-semibold text-ink">Upload image</span>
+              <span className="text-xs text-muted">PNG, JPG, WEBP — max 5MB</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => onImage(e.target.files?.[0])} />
+            </label>
+            {imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={imageUrl} alt="" className="mt-4 max-h-56 w-full rounded-[14px] object-cover ring-1 ring-border" />
+            ) : null}
+          </div>
+
+          <div className="rounded-[18px] border border-border bg-forest p-5 text-white shadow-card">
+            <p className="text-sm font-semibold">Make it stand out</p>
+            <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-white/80">
+              <li>• Ask one clear question</li>
+              <li>• Keep options distinct</li>
+              <li>• Add an image to boost votes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </form>
   );
 }

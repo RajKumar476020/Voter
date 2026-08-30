@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 
 export function CommentThread({ pollId, comments }: { pollId: string; comments: CommentNode[] }) {
   return (
-    <div className="divide-y divide-line">
+    <div className="divide-y divide-border/60">
       {comments.map((comment) => (
         <CommentItem key={comment.id} pollId={pollId} comment={comment} />
       ))}
@@ -48,34 +48,34 @@ function CommentItem({ pollId, comment, nested = false }: { pollId: string; comm
   });
 
   return (
-    <div className={cn('px-4 py-4', nested && 'ml-8 border-l border-line')}>
+    <div className={cn('py-4', nested && 'ml-4 border-l border-border pl-4 sm:ml-8')}>
       <div className="flex gap-3">
         <Link href={`/u/${comment.author.username}`}>
           <Avatar name={comment.author.displayName || comment.author.username} src={comment.author.avatarUrl} size="sm" />
         </Link>
         <div className="min-w-0 flex-1">
           <p className="text-sm">
-            <Link href={`/u/${comment.author.username}`} className="font-semibold hover:underline">
+            <Link href={`/u/${comment.author.username}`} className="font-semibold text-ink hover:text-brand">
               {comment.author.displayName || comment.author.username}
             </Link>{' '}
             <span className="text-muted">{timeAgo(comment.createdAt)}</span>
           </p>
-          <p className="mt-1 whitespace-pre-wrap">{comment.content}</p>
+          <p className="mt-1 whitespace-pre-wrap text-[14.5px] leading-relaxed text-ink-soft">{comment.content}</p>
           <div className="mt-2 flex items-center gap-4 text-sm text-muted">
-            <button type="button" className={cn('flex items-center gap-1', comment.liked && 'text-vote')} onClick={() => like.mutate()}>
-              <Heart className={cn('h-4 w-4', comment.liked && 'fill-current')} />
+            <button type="button" className={cn('flex items-center gap-1.5 hover:text-ink', comment.liked && 'text-brand')} onClick={() => like.mutate()}>
+              <Heart className={cn('h-4 w-4', comment.liked && 'fill-current text-brand')} strokeWidth={1.9} />
               {comment.likeCount}
             </button>
             {!nested ? (
-              <button type="button" onClick={() => setReply((v) => !v)}>
+              <button type="button" className="hover:text-ink" onClick={() => setReply((v) => !v)}>
                 Reply
               </button>
             ) : null}
-            <button type="button" onClick={() => setReport(true)}>
+            <button type="button" className="hover:text-ink" onClick={() => setReport(true)}>
               Report
             </button>
             {user && (user.id === comment.author.id || user.role !== 'USER') ? (
-              <button type="button" onClick={() => remove.mutate()}>
+              <button type="button" onClick={() => remove.mutate()} className="hover:text-danger">
                 <Trash2 className="h-4 w-4" />
               </button>
             ) : null}
@@ -89,13 +89,13 @@ function CommentItem({ pollId, comment, nested = false }: { pollId: string; comm
               }}
             >
               <textarea
-                className="min-h-16 w-full rounded-2xl border border-line bg-paper-2 px-3 py-2"
+                className="min-h-16 w-full rounded-[12px] border border-border bg-surface-soft/60 px-3 py-2 text-sm placeholder:text-placeholder focus:border-brand focus:ring-[3px] focus:ring-brand/10 outline-none"
                 maxLength={2000}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Write a reply"
               />
-              <button type="submit" className="mt-1 text-sm font-semibold text-vote" disabled={!text.trim() || send.isPending}>
+              <button type="submit" className="mt-2 rounded-[11px] bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-40" disabled={!text.trim() || send.isPending}>
                 Reply
               </button>
             </form>

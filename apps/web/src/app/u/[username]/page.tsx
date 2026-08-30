@@ -46,7 +46,7 @@ export default function ProfilePage() {
   if (profile.isLoading) {
     return (
       <AppShell>
-        <div className="p-4">
+        <div className="px-4 pt-6 sm:px-0">
           <Skeleton className="h-40" />
         </div>
       </AppShell>
@@ -55,7 +55,7 @@ export default function ProfilePage() {
   if (profile.isError || !profile.data) {
     return (
       <AppShell>
-        <div className="p-6">
+        <div className="px-4 py-10 sm:px-0">
           <EmptyState title="User not found" body="This profile may have been removed." />
         </div>
       </AppShell>
@@ -67,8 +67,8 @@ export default function ProfilePage() {
 
   return (
     <AppShell>
-      <header className="border-b border-line px-4 py-6">
-        <div className="flex items-start justify-between gap-4">
+      <header className="rounded-[18px] border border-border bg-surface p-5 shadow-card sm:p-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <Avatar name={p.displayName || p.username} src={p.avatarUrl} size="lg" />
           <div className="flex flex-wrap gap-2">
             {p.isSelf ? (
@@ -88,44 +88,48 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-        <h1 className="mt-4 font-display text-3xl">{p.displayName || p.username}</h1>
-        <p className="text-muted">@{p.username}</p>
-        {p.bio ? <p className="mt-3 max-w-xl">{p.bio}</p> : null}
-        <p className="mt-3 text-sm text-muted">Joined {new Date(p.createdAt).toLocaleDateString()}</p>
-        <div className="mt-4 flex flex-wrap gap-4 text-sm">
-          <button type="button" onClick={() => setList('followers')}>
-            <strong>{formatCount(p.followerCount)}</strong> followers
+        <h1 className="mt-4 text-[26px] font-semibold tracking-tight text-forest sm:text-[30px]" style={{ letterSpacing: '-0.025em' }}>
+          {p.displayName || p.username}
+        </h1>
+        <p className="text-sm text-muted">@{p.username}</p>
+        {p.bio ? <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft">{p.bio}</p> : null}
+        <p className="mt-3 text-xs text-muted">Joined {new Date(p.createdAt).toLocaleDateString()}</p>
+        <div className="mt-4 flex flex-wrap gap-5 text-sm">
+          <button type="button" onClick={() => setList('followers')} className="hover:text-brand">
+            <strong className="font-semibold text-ink">{formatCount(p.followerCount)}</strong> <span className="text-muted">followers</span>
           </button>
-          <button type="button" onClick={() => setList('following')}>
-            <strong>{formatCount(p.followingCount)}</strong> following
+          <button type="button" onClick={() => setList('following')} className="hover:text-brand">
+            <strong className="font-semibold text-ink">{formatCount(p.followingCount)}</strong> <span className="text-muted">following</span>
           </button>
           <span>
-            <strong>{formatCount(p.pollCount)}</strong> polls
+            <strong className="font-semibold text-ink">{formatCount(p.pollCount)}</strong> <span className="text-muted">polls</span>
           </span>
           <span>
-            <strong>{formatCount(p.votesReceived)}</strong> votes received
+            <strong className="font-semibold text-ink">{formatCount(p.votesReceived)}</strong> <span className="text-muted">votes received</span>
           </span>
         </div>
       </header>
-      <div className="flex border-b border-line">
+      <div className="mt-5 flex gap-2 overflow-x-auto">
         {visibleTabs.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => setTab(item.id)}
             className={cn(
-              'flex-1 px-3 py-3 text-sm',
-              tab === item.id ? 'border-b-2 border-vote font-semibold' : 'text-muted',
+              'rounded-full px-4 py-2 text-sm font-semibold transition',
+              tab === item.id ? 'bg-forest text-white shadow-sm' : 'bg-surface text-ink ring-1 ring-border hover:bg-surface-soft',
             )}
           >
             {item.label}
           </button>
         ))}
       </div>
-      {tab === 'polls' ? <FeedList path={`/api/v1/users/${username}/polls`} /> : null}
-      {tab === 'votes' ? <FeedList path={`/api/v1/users/${username}/votes`} /> : null}
-      {tab === 'liked' ? <FeedList path={`/api/v1/users/${username}/liked`} /> : null}
-      {tab === 'saved' && (p.isSelf || user?.username === username) ? <FeedList path="/api/v1/users/me/saved" /> : null}
+      <div className="mt-4">
+        {tab === 'polls' ? <FeedList path={`/api/v1/users/${username}/polls`} /> : null}
+        {tab === 'votes' ? <FeedList path={`/api/v1/users/${username}/votes`} /> : null}
+        {tab === 'liked' ? <FeedList path={`/api/v1/users/${username}/liked`} /> : null}
+        {tab === 'saved' && (p.isSelf || user?.username === username) ? <FeedList path="/api/v1/users/me/saved" /> : null}
+      </div>
       {list ? <PeopleSheet username={username} kind={list} onClose={() => setList(null)} /> : null}
       {report ? <ReportDialog targetType="USER" targetId={p.id} onClose={() => setReport(false)} /> : null}
     </AppShell>
@@ -146,22 +150,22 @@ function PeopleSheet({
     queryFn: () => client.get<{ items: UserPreview[] }>(`/api/v1/users/${username}/${kind}`),
   });
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 sm:items-center" role="dialog">
-      <div className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-3xl bg-paper p-5">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 backdrop-blur-sm sm:items-center" role="dialog">
+      <div className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-[20px] border border-border bg-surface p-6 shadow-elevated">
         <div className="flex items-center justify-between">
-          <p className="font-display text-2xl capitalize">{kind}</p>
-          <Button variant="ghost" onClick={onClose}>
+          <p className="text-xl font-semibold tracking-tight text-ink capitalize">{kind}</p>
+          <Button variant="ghost" size="sm" onClick={onClose}>
             Close
           </Button>
         </div>
         <ul className="mt-4 space-y-3">
           {(people.data?.items ?? []).map((person) => (
             <li key={person.id}>
-              <a href={`/u/${person.username}`} className="flex items-center gap-3">
+              <a href={`/u/${person.username}`} className="flex items-center gap-3 rounded-[12px] p-2 hover:bg-surface-soft">
                 <Avatar name={person.displayName || person.username} src={person.avatarUrl} />
                 <span>
-                  <span className="block font-medium">{person.displayName || person.username}</span>
-                  <span className="text-sm text-muted">@{person.username}</span>
+                  <span className="block text-sm font-semibold text-ink">{person.displayName || person.username}</span>
+                  <span className="text-xs text-muted">@{person.username}</span>
                 </span>
               </a>
             </li>

@@ -7,6 +7,7 @@ import { ApiError, client } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/field';
 import { useAuth } from '@/components/providers/auth-provider';
+import { AuthScreen } from '@/components/layout/auth-screen';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -35,35 +36,31 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-10">
-      <Link href="/" className="font-display text-4xl">
-        Voter
-      </Link>
-      <p className="mt-2 text-muted">Ask a question. Let the room decide.</p>
-      <form onSubmit={onSubmit} className="mt-8 space-y-4">
+    <AuthScreen title="Create your account" subtitle="Let’s get you started.">
+      <form onSubmit={onSubmit} className="space-y-4">
         <Field label="Username" hint="Letters, numbers, and underscores.">
-          <Input value={username} onChange={(e) => setUsername(e.target.value)} minLength={3} maxLength={20} required />
+          <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="alex_morgan" minLength={3} maxLength={20} required />
         </Field>
         <Field label="Email">
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
         </Field>
         <Field label="Display name" hint="Optional">
-          <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={50} />
+          <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Alex Morgan" maxLength={50} />
         </Field>
         <Field label="Password" hint="At least 8 characters.">
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
+          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" minLength={8} required />
         </Field>
-        {error ? <p className="text-sm text-vote">{error}</p> : null}
+        {error ? <p className="rounded-[10px] bg-danger/8 px-3 py-2 text-sm text-danger">{error}</p> : null}
         <Button className="w-full" type="submit">
           Create account
         </Button>
       </form>
-      <p className="mt-4 text-sm text-muted">
+      <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{' '}
-        <Link href="/login" className="underline">
+        <Link href="/login" className="font-semibold text-brand hover:text-brand-dark hover:underline">
           Sign in
         </Link>
       </p>
-    </main>
+    </AuthScreen>
   );
 }

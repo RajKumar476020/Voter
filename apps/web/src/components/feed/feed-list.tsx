@@ -8,11 +8,7 @@ import { EmptyState, Skeleton } from '@/components/ui/empty';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
-export function FeedList({
-  path,
-}: {
-  path: string;
-}) {
+export function FeedList({ path }: { path: string }) {
   const router = useRouter();
   const feed = useInfiniteQuery({
     queryKey: ['feed', path],
@@ -24,16 +20,21 @@ export function FeedList({
 
   if (feed.isLoading) {
     return (
-      <div className="space-y-4 p-4">
-        <Skeleton className="h-40" />
-        <Skeleton className="h-40" />
+      <div className="space-y-4">
+        <Skeleton className="h-44" />
+        <Skeleton className="h-44" />
+        <Skeleton className="h-32" />
       </div>
     );
   }
   if (feed.isError) {
     return (
-      <div className="p-6">
-        <EmptyState title="Couldn’t load this feed" body="The room went quiet. Try again." action={{ label: 'Retry', onClick: () => feed.refetch() }} />
+      <div>
+        <EmptyState
+          title="Couldn’t load this feed"
+          body="The room went quiet. Try again."
+          action={{ label: 'Retry', onClick: () => feed.refetch() }}
+        />
       </div>
     );
   }
@@ -41,7 +42,7 @@ export function FeedList({
   const items = feed.data?.pages.flatMap((p) => p.items) ?? [];
   if (!items.length) {
     return (
-      <div className="p-6">
+      <div>
         <EmptyState
           title="No polls yet"
           body="Be the first person to ask the community."
@@ -52,12 +53,12 @@ export function FeedList({
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       {items.map((poll) => (
         <PollCard key={poll.id} poll={poll} />
       ))}
       {feed.hasNextPage ? (
-        <div className="p-4 text-center">
+        <div className="py-3 text-center">
           <Button variant="outline" onClick={() => feed.fetchNextPage()}>
             Load more
           </Button>

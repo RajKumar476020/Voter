@@ -1,31 +1,27 @@
 import type { Metadata } from 'next';
-import { Figtree, Fraunces } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers/providers';
 
-const figtree = Figtree({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-figtree',
-});
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-fraunces',
+  variable: '--font-inter',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: {
-    default: 'Voter — Ask. Vote. Decide.',
+    default: 'Voter — Ask. Vote. Inspire change.',
     template: '%s · Voter',
   },
-  description: 'A social polling platform where anyone can ask a question and let the community decide.',
+  description: 'Every vote counts. Every voice matters — create polls and watch the community decide in real time.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${figtree.variable} ${fraunces.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

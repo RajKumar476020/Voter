@@ -70,27 +70,32 @@ export default function AdminPage() {
 function AdminHome() {
   const [tab, setTab] = useState<(typeof TABS)[number]>('Dashboard');
   return (
-    <div>
-      <div className="border-b border-line px-4 py-4">
-        <h1 className="font-display text-3xl">Admin</h1>
-        <div className="mt-3 flex gap-2 overflow-x-auto">
-          {TABS.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setTab(item)}
-              className={cn('rounded-full px-3 py-1.5 text-sm', tab === item ? 'bg-ink text-paper' : 'bg-line')}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
+    <div className="px-4 pt-6 sm:px-0">
+      <h1 className="text-[26px] font-semibold tracking-tight text-forest sm:text-[30px]" style={{ letterSpacing: '-0.025em' }}>
+        Admin
+      </h1>
+      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+        {TABS.map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setTab(item)}
+            className={cn(
+              'rounded-full px-4 py-2 text-sm font-semibold transition',
+              tab === item ? 'bg-forest text-white shadow-sm' : 'bg-surface text-ink ring-1 ring-border hover:bg-surface-soft',
+            )}
+          >
+            {item}
+          </button>
+        ))}
       </div>
-      {tab === 'Dashboard' ? <Dashboard /> : null}
-      {tab === 'Users' ? <Users /> : null}
-      {tab === 'Polls' ? <Polls /> : null}
-      {tab === 'Comments' ? <Comments /> : null}
-      {tab === 'Reports' ? <Reports /> : null}
+      <div className="mt-6">
+        {tab === 'Dashboard' ? <Dashboard /> : null}
+        {tab === 'Users' ? <Users /> : null}
+        {tab === 'Polls' ? <Polls /> : null}
+        {tab === 'Comments' ? <Comments /> : null}
+        {tab === 'Reports' ? <Reports /> : null}
+      </div>
     </div>
   );
 }
@@ -114,11 +119,13 @@ function Dashboard() {
       ]
     : [];
   return (
-    <div className="grid gap-3 p-4 sm:grid-cols-2">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map(([label, value]) => (
-        <div key={label} className="rounded-3xl border border-line bg-paper-2 p-4">
+        <div key={label} className="rounded-[18px] border border-border bg-surface p-5 shadow-card">
           <p className="text-sm text-muted">{label}</p>
-          <p className="mt-1 font-display text-3xl">{value}</p>
+          <p className="mt-1 text-3xl font-semibold tracking-tight text-ink" style={{ letterSpacing: '-0.02em' }}>
+            {value}
+          </p>
         </div>
       ))}
     </div>
@@ -137,20 +144,20 @@ function Users() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
   });
   return (
-    <div className="p-4">
+    <div>
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search users" />
-      <ul className="mt-4 divide-y divide-line">
+      <ul className="mt-4 divide-y divide-border overflow-hidden rounded-[18px] border border-border bg-surface shadow-card">
         {(users.data ?? []).map((u) => (
-          <li key={u.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+          <li key={u.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div>
-              <p className="font-medium">
-                {u.displayName || u.username} <span className="text-muted">@{u.username}</span>
+              <p className="text-sm font-semibold text-ink">
+                {u.displayName || u.username} <span className="font-normal text-muted">@{u.username}</span>
               </p>
-              <p className="text-sm text-muted">
+              <p className="text-xs text-muted">
                 {u.email} · {u.status} · {u.role}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" onClick={() => setStatus.mutate({ id: u.id, status: 'SUSPENDED' })}>
                 Suspend
               </Button>
@@ -180,16 +187,16 @@ function Polls() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-polls'] }),
   });
   return (
-    <div className="p-4">
+    <div>
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search polls" />
-      <ul className="mt-4 divide-y divide-line">
+      <ul className="mt-4 divide-y divide-border overflow-hidden rounded-[18px] border border-border bg-surface shadow-card">
         {(polls.data ?? []).map((p) => (
-          <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+          <li key={p.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div>
-              <a className="font-medium hover:underline" href={`/p/${p.id}`}>
+              <a className="text-sm font-semibold text-ink hover:text-brand hover:underline" href={`/p/${p.id}`}>
                 {p.question}
               </a>
-              <p className="text-sm text-muted">
+              <p className="text-xs text-muted">
                 @{p.author.username} · {p.status}
               </p>
             </div>
@@ -220,14 +227,14 @@ function Comments() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-comments'] }),
   });
   return (
-    <div className="p-4">
+    <div>
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search comments" />
-      <ul className="mt-4 divide-y divide-line">
+      <ul className="mt-4 divide-y divide-border overflow-hidden rounded-[18px] border border-border bg-surface shadow-card">
         {(comments.data ?? []).map((c) => (
-          <li key={c.id} className="flex items-start justify-between gap-3 py-3">
+          <li key={c.id} className="flex flex-col items-start justify-between gap-3 px-4 py-4 sm:flex-row">
             <div>
-              <p>{c.content}</p>
-              <p className="text-sm text-muted">
+              <p className="text-sm text-ink">{c.content}</p>
+              <p className="text-xs text-muted">
                 @{c.user.username} on {c.poll.question}
               </p>
             </div>
@@ -252,30 +259,34 @@ function Reports() {
     mutationFn: ({ id, status }: { id: string; status: string }) => client.patch(`/api/v1/admin/reports/${id}`, { status }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reports'] }),
   });
+  const STATUSES = ['PENDING', 'UNDER_REVIEW', 'RESOLVED', 'REJECTED'] as const;
   return (
-    <div className="p-4">
-      <div className="flex gap-2">
-        {['PENDING', 'UNDER_REVIEW', 'RESOLVED', 'REJECTED'].map((s) => (
+    <div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {STATUSES.map((s) => (
           <button
             key={s}
             type="button"
             onClick={() => setStatus(s)}
-            className={cn('rounded-full px-3 py-1 text-sm', status === s ? 'bg-ink text-paper' : 'bg-line')}
+            className={cn(
+              'rounded-full px-4 py-2 text-sm font-semibold capitalize transition',
+              status === s ? 'bg-forest text-white shadow-sm' : 'bg-surface text-ink ring-1 ring-border hover:bg-surface-soft',
+            )}
           >
-            {s.replace('_', ' ').toLowerCase()}
+            {s.replaceAll('_', ' ').toLowerCase()}
           </button>
         ))}
       </div>
-      <ul className="mt-4 divide-y divide-line">
+      <ul className="mt-4 space-y-3">
         {(reports.data ?? []).map((r) => (
-          <li key={r.id} className="py-3">
-            <p className="font-medium">
+          <li key={r.id} className="rounded-[18px] border border-border bg-surface p-5 shadow-card">
+            <p className="text-sm font-semibold text-ink">
               {r.targetType} · {r.reason.replaceAll('_', ' ')}
             </p>
             <p className="text-sm text-muted">
               by @{r.reporter.username} · {r.description}
             </p>
-            <div className="mt-2 flex gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" onClick={() => review.mutate({ id: r.id, status: 'RESOLVED' })}>
                 Resolve
               </Button>

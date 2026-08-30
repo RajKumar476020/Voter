@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ApiError, client } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/field';
+import { AuthScreen } from '@/components/layout/auth-screen';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -25,37 +26,40 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5">
-      <Link href="/" className="font-display text-4xl">
-        Voter
-      </Link>
-      <p className="mt-2 text-muted">We’ll send a reset link if that email exists.</p>
+    <AuthScreen title="Reset password" subtitle="We’ll send a reset link if that email exists.">
       {sent ? (
-        <div className="mt-8 space-y-3">
-          <p>If an account exists for that email, a reset was created.</p>
+        <div className="space-y-4">
+          <div className="rounded-[14px] border border-brand/20 bg-brand-soft px-4 py-3 text-sm leading-relaxed text-forest">
+            If an account exists for that email, a reset was created. Check your inbox.
+          </div>
           {devToken ? (
-            <p className="rounded-2xl bg-paper-2 p-3 text-sm">
+            <p className="rounded-[12px] border border-border bg-surface px-4 py-3 text-sm">
               Dev token:{' '}
-              <Link className="underline" href={`/reset-password?token=${devToken}`}>
+              <Link className="font-semibold text-brand underline" href={`/reset-password?token=${devToken}`}>
                 reset password
               </Link>
             </p>
           ) : null}
-          <Link href="/login" className="text-sm underline">
+          <Link href="/login" className="inline-flex text-sm font-semibold text-brand hover:underline">
             Back to sign in
           </Link>
         </div>
       ) : (
-        <form onSubmit={onSubmit} className="mt-8 space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4">
           <Field label="Email">
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
           </Field>
-          {error ? <p className="text-sm text-vote">{error}</p> : null}
+          {error ? <p className="rounded-[10px] bg-danger/8 px-3 py-2 text-sm text-danger">{error}</p> : null}
           <Button className="w-full" type="submit">
-            Send reset
+            Send reset link
           </Button>
+          <p className="text-center text-sm text-muted">
+            <Link href="/login" className="font-medium text-brand hover:underline">
+              Back to sign in
+            </Link>
+          </p>
         </form>
       )}
-    </main>
+    </AuthScreen>
   );
 }

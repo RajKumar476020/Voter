@@ -1,11 +1,11 @@
 'use client';
 
 import { FormEvent, Suspense, useState } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ApiError, client } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/field';
+import { AuthScreen } from '@/components/layout/auth-screen';
 
 function ResetForm() {
   const router = useRouter();
@@ -26,14 +26,14 @@ function ResetForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <Field label="Reset token">
-        <Input value={token} onChange={(e) => setToken(e.target.value)} required />
+        <Input value={token} onChange={(e) => setToken(e.target.value)} placeholder="Paste your reset token" required />
       </Field>
       <Field label="New password">
-        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
+        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" minLength={8} required />
       </Field>
-      {error ? <p className="text-sm text-vote">{error}</p> : null}
+      {error ? <p className="rounded-[10px] bg-danger/8 px-3 py-2 text-sm text-danger">{error}</p> : null}
       <Button className="w-full" type="submit">
         Update password
       </Button>
@@ -43,14 +43,10 @@ function ResetForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5">
-      <Link href="/" className="font-display text-4xl">
-        Voter
-      </Link>
-      <p className="mt-2 text-muted">Choose a new password.</p>
+    <AuthScreen title="Choose a new password" subtitle="Pick something you’ll remember.">
       <Suspense>
         <ResetForm />
       </Suspense>
-    </main>
+    </AuthScreen>
   );
 }
