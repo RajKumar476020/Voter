@@ -6,7 +6,7 @@
     "apps/api"
   ],
   "scripts": {
-    "dev": "npm run dev:api & npm run dev:web",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
     "dev:web": "npm run dev -w web",
     "dev:api": "npm run dev -w api",
     "build": "npm run build -w api && npm run build -w web",
@@ -14,5 +14,8 @@
     "db:migrate": "npm run prisma:migrate -w api",
     "db:seed": "npm run prisma:seed -w api",
     "db:studio": "npm run prisma:studio -w api"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }
