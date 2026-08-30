@@ -1,0 +1,14 @@
+{
+  "installCommand": "npm install && npx prisma generate --schema=apps/api/prisma/schema.prisma",
+  "buildCommand": "npm run build -w web",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs",
+  "functions": {
+    "apps/web/api/index.ts": {
+      "includeFiles": "apps/api/**"
+    },
+    "api/index.ts": {
+      "includeFiles": "apps/api/**"
+    }
+  }
+}
